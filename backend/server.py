@@ -293,48 +293,59 @@ async def get_documents():
 
 @api_router.post("/ask", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest):
-    """Soru sorma endpoint'i"""
+    """Soru sorma endpoint'i - geliştirilmiş öğrenme sistemi"""
     try:
         question = request.question.strip()
         if not question:
             raise HTTPException(status_code=400, detail="Soru boş olamaz")
         
-        # İlgili belgeyi bul
-        relevant_doc = await find_relevant_document(question)
+        # Soruyla ilgili tüm belgeleri al ve birleştir
+        all_documents = await db.documents.find().to_list(1000)
+        relevant_content = ""
+        relevant_doc_name = None
+        
+        if all_documents:
+            # En uygun belgeyi bul
+            relevant_doc = await find_relevant_document(question)
+            
+            if relevant_doc:
+                relevant_content = relevant_doc['content']
+                relevant_doc_name = relevant_doc['filename']
+                
+                # Soru geçmişinden benzer soruları bul
+                similar_questions = await db.questions.find({
+                    "$text": {"$search": question}
+                }).limit(3).to_list(3)
+                
+                # Önceki soru-cevapları da içeriğe ekle
+                if similar_questions:
+                    relevant_content += "\n\n--- ÖNCEKİ ÖRNEKLER ---\n"
+                    for prev_qa in similar_questions:
+                        relevant_content += f"\nÖrnek Soru: {prev_qa.get('question', '')}\n"
+                        relevant_content += f"Örnek Cevap: {prev_qa.get('answer', '')}\n"
+            else:
+                # Hiçbir belge eşleşmezse, en son yüklenen belgeleri kullan
+                recent_docs = sorted(all_documents, key=lambda x: x.get('upload_date', ''), reverse=True)[:2]
+                for doc in recent_docs:
+                    relevant_content += doc['content'][:1000] + "\n\n"
+                relevant_doc_name = "Genel kaynaklardan"
         
         # AI'dan cevap al
-        if relevant_doc:
-            answer = await get_ai_answer(question, relevant_doc['content'])
-            
-            # Soru-cevap geçmişini kaydet
-            qa_record = Question(
-                question=question,
-                answer=answer,
-                relevant_document=relevant_doc['id']
-            )
-            await db.questions.insert_one(qa_record.dict())
-            
-            return QuestionResponse(
-                answer=answer,
-                relevant_document_id=relevant_doc['id'],
-                relevant_document_name=relevant_doc['filename']
-            )
-        else:
-            answer = await get_ai_answer(question)
-            
-            # Soru-cevap geçmişini kaydet
-            qa_record = Question(
-                question=question,
-                answer=answer,
-                relevant_document=""
-            )
-            await db.questions.insert_one(qa_record.dict())
-            
-            return QuestionResponse(
-                answer=answer,
-                relevant_document_id=None,
-                relevant_document_name=None
-            )
+        answer = await get_ai_answer(question, relevant_content if relevant_content.strip() else None)
+        
+        # Soru-cevap geçmişini kaydet
+        qa_record = Question(
+            question=question,
+            answer=answer,
+            relevant_document=relevant_doc['id'] if relevant_doc else ""
+        )
+        await db.questions.insert_one(qa_record.dict())
+        
+        return QuestionResponse(
+            answer=answer,
+            relevant_document_id=relevant_doc['id'] if relevant_doc else None,
+            relevant_document_name=relevant_doc_name
+        )
             
     except HTTPException:
         raise
