@@ -12,11 +12,14 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
+  background-color: #000000;
+  color: #ffffff;
+  overflow-x: hidden;
 }
 
 .App {
   min-height: 100vh;
+  background-color: #000000;
 }
 
 /* Custom scrollbar */
@@ -25,50 +28,45 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #404040;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #606060;
 }
 
-/* Line clamp utility */
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Smooth transitions */
-.transition-colors {
-  transition-property: color, background-color, border-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* Hover effects */
-.hover\:border-blue-400:hover {
-  border-color: #60a5fa;
-}
-
-/* Focus styles */
-.focus\:ring-2:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 2px #3b82f6;
-}
-
-/* Animation keyframes */
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
   }
   to {
     opacity: 1;
@@ -77,51 +75,62 @@ body {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .max-w-7xl {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .grid-cols-1.lg\:grid-cols-3 {
-    grid-template-columns: 1fr;
-  }
-  
-  .lg\:col-span-1,
-  .lg\:col-span-2 {
-    grid-column: span 1;
-  }
+.animate-slideUp {
+  animation: slideUp 0.5s ease-out;
 }
 
-/* Card animations */
-.card-hover {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out;
 }
 
-.card-hover:hover {
+/* Button hover effects */
+.btn-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
 }
 
-/* Button animations */
-.btn-primary {
-  transition: all 0.2s ease-in-out;
+/* Text selection */
+::selection {
+  background-color: #ffffff;
+  color: #000000;
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+/* Focus styles */
+.focus-visible\:ring-white:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #ffffff;
 }
 
-/* Loading spinner */
-.animate-spin {
-  animation: spin 1s linear infinite;
+/* Prose styles for content */
+.prose-invert {
+  color: #e5e7eb;
 }
 
+.prose-invert h1,
+.prose-invert h2,
+.prose-invert h3,
+.prose-invert h4 {
+  color: #ffffff;
+}
+
+.prose-invert p {
+  color: #d1d5db;
+  line-height: 1.7;
+}
+
+.prose-invert strong {
+  color: #ffffff;
+}
+
+/* Loading animation */
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -131,29 +140,120 @@ body {
   }
 }
 
-/* Text selection */
-::selection {
-  background-color: #3b82f6;
-  color: white;
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-/* Focus-visible for better accessibility */
-.focus-visible\:ring-2:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 2px #3b82f6;
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 
-/* Gradient backgrounds */
-.bg-gradient-to-br {
-  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+/* Responsive design */
+@media (max-width: 768px) {
+  .max-w-4xl {
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .text-4xl {
+    font-size: 2.5rem;
+  }
+  
+  .text-6xl {
+    font-size: 3rem;
+  }
+  
+  .p-8 {
+    padding: 1.5rem;
+  }
+  
+  .px-8 {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
-.from-slate-50 {
-  --tw-gradient-from: #f8fafc;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(248, 250, 252, 0));
+/* Input and textarea dark theme */
+input, textarea {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #ffffff !important;
 }
 
-.to-blue-50 {
-  --tw-gradient-to: #eff6ff;
+input:focus, textarea:focus {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 1px #ffffff !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Card dark theme */
+.bg-gray-900 {
+  background-color: #111827 !important;
+}
+
+.border-gray-700 {
+  border-color: #374151 !important;
+}
+
+.border-gray-600 {
+  border-color: #4b5563 !important;
+}
+
+/* Button customizations */
+.bg-white {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.hover\:bg-gray-200:hover {
+  background-color: #e5e7eb !important;
+}
+
+.hover\:bg-gray-800:hover {
+  background-color: #1f2937 !important;
+}
+
+/* Rounded corners */
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Transform effects */
+.transform {
+  transform: translateZ(0);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+/* Z-index utilities */
+.z-10 {
+  z-index: 10;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+/* Backdrop blur effect */
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
