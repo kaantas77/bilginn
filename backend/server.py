@@ -93,27 +93,61 @@ def extract_text_from_txt(file_bytes):
         raise HTTPException(status_code=400, detail=f"Metin dosyası okuma hatası: {str(e)}")
 
 async def find_relevant_document(question: str):
-    """Soruya en uygun belgeyi bulma"""
+    """Soruya en uygun belgeyi bulma - geliştirilmiş versiyon"""
     documents = await db.documents.find().to_list(1000)
     
     if not documents:
         return None
     
-    # Basit arama algoritması - gerçek uygulamada vector search kullanılabilir
+    # Geliştirilmiş arama algoritması
     best_match = None
     best_score = 0
     
-    question_words = question.lower().split()
+    # Soruyu temizle ve anahtar kelimeleri çıkar
+    question_clean = question.lower().strip()
+    question_words = set(question_clean.split())
+    
+    # Stopwords'leri çıkar (basit Türkçe stopwords)
+    stopwords = {'bir', 'bu', 'şu', 've', 'ile', 'için', 'ne', 'nedir', 'nasıl', 'hangi', 'kim', 'niye', 'niçin', 'mi', 'mı', 'mu', 'mü'}
+    question_keywords = question_words - stopwords
     
     for doc in documents:
-        content_words = doc['content'].lower().split()
-        common_words = set(question_words) & set(content_words)
-        score = len(common_words)
+        content_lower = doc['content'].lower()
+        content_words = set(content_lower.split())
         
-        if score > best_score:
-            best_score = score
+        # Kelime eşleşme skoru
+        common_words = question_keywords & content_words
+        word_score = len(common_words) * 2
+        
+        # Phrase eşleşme skoru (2-3 kelimelik ifadeler)
+        phrase_score = 0
+        for word in question_keywords:
+            if word in content_lower:
+                phrase_score += content_lower.count(word)
+        
+        # Dosya tipine göre bonus
+        file_type_bonus = 0
+        if doc['file_type'] == 'pdf':
+            file_type_bonus = 1  # PDF'ler genelde daha kaliteli
+        
+        # Dosya adı eşleşme skoru
+        filename_score = 0
+        filename_lower = doc['filename'].lower()
+        for word in question_keywords:
+            if word in filename_lower:
+                filename_score += 3  # Dosya adındaki eşleşmeler önemli
+        
+        # Toplam skor
+        total_score = word_score + phrase_score + file_type_bonus + filename_score
+        
+        if total_score > best_score:
+            best_score = total_score
             best_match = doc
     
+    # Minimum skor kontrolü - çok düşükse None döndür
+    if best_score < 2:
+        return None
+        
     return best_match
 
 async def get_ai_answer(question: str, document_content: str = None):
