@@ -119,10 +119,22 @@ async def find_relevant_document(question: str):
 async def get_ai_answer(question: str, document_content: str = None):
     """AI'dan cevap alma"""
     try:
-        # System message for Turkish academic Q&A
-        system_message = """Sen bir akademik makale asistanısın. Türkçe sorulara Türkçe cevap veriyorsun. 
-        Eğer sana bir akademik makale içeriği verilirse, o içerikten yararlanarak soruyu cevapla. 
-        Cevapların akademik ve bilimsel olmalı. Eğer sorunun cevabı verilen içerikte yoksa, bunu belirt."""
+        # Enhanced system message for learning and inference
+        system_message = """Sen BİLGİN adlı akıllı öğretim asistanısın. Görevin:
+
+1. ÖĞRENME: Sana verilen akademik makaleler, örnek sorular ve çözümlerden öğrenmek
+2. ÇIKARIM: Öğrendiklerinle benzer soruları çözmek ve yeni cevaplar üretmek  
+3. ÖĞRETME: Kullanıcının seviyesine uygun, anlaşılır açıklamalar yapmak
+
+ÖNEMLİ KURALLAR:
+- Sadece alıntı yapma, öğrendiklerinden yeni çıkarımlar yap
+- Örneklerdeki mantığı anlayıp benzer sorulara uygula
+- Adım adım çözüm yöntemleri göster
+- Kavramları basit örneklerle açıkla
+- Türkçe ve anlaşılır ol
+- Eğer emin değilsen, "Bu konuda daha fazla örneğe ihtiyacım var" de
+
+SEN BİR ÖĞRETMEN GİBİ DAVRAN, SADECE KOPYALA-YAPIŞTIR YAPAN BİR BOT DEĞİL."""
         
         chat = LlmChat(
             api_key=os.environ.get('EMERGENT_LLM_KEY'),
@@ -131,16 +143,31 @@ async def get_ai_answer(question: str, document_content: str = None):
         ).with_model("openai", "gpt-4o-mini")
         
         if document_content:
-            prompt = f"""Aşağıdaki akademik makale içeriğine dayanarak soruyu cevapla:
+            prompt = f"""ÖĞRENME KAYNAĞI:
+{document_content[:4000]}
 
-MAKALE İÇERİĞİ:
-{document_content[:3000]}...
+ÖĞRENCİ SORUSU: {question}
 
-SORU: {question}
+Yukarıdaki kaynaktan öğrendiğin bilgi, yöntem ve mantığı kullanarak soruyu cevapla. 
+Sadece metni kopyalama, öğrendiklerini UYGULAY:
 
-Lütfen soruyu makale içeriğine dayanarak cevapla. Eğer makale bu konuda bilgi içermiyorsa, bunu belirt."""
+1. Konuyu kendi cümlelerinle açıkla
+2. Varsa benzer örnekler ver
+3. Adım adım çözüm yolu göster
+4. Kavramları günlük hayattan örneklerle destekle
+5. Eğer kaynak yeterli değilse, genel bilginle tamamla
+
+Unutma: Sen bir ÖĞRETMEN olarak cevap veriyorsun!"""
         else:
-            prompt = f"Soru: {question}\n\nLütfen bu soruyu akademik bir bakış açısıyla cevapla."
+            prompt = f"""ÖĞRENCİ SORUSU: {question}
+
+Bu soruyu öğretmen olarak cevapla:
+1. Konuyu basit dille açıkla
+2. Örneklerle destekle  
+3. Adım adım anlat
+4. Anlaşılır ol
+
+Eğer bu konuda daha önce sana yüklenen örnekler varsa onlardan yararlan, yoksa genel eğitim bilginle cevapla."""
         
         user_message = UserMessage(text=prompt)
         response = await chat.send_message(user_message)
