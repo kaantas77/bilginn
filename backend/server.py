@@ -26,8 +26,24 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# MongoDB indexes oluştur
+async def create_indexes():
+    """Veritabanı indexlerini oluştur"""
+    try:
+        # Text search için index
+        await db.questions.create_index([("question", "text"), ("answer", "text")])
+        await db.documents.create_index([("content", "text"), ("filename", "text")])
+        logger.info("MongoDB indexes oluşturuldu")
+    except Exception as e:
+        logger.warning(f"Index oluşturma hatası: {e}")
+
 # Create the main app without a prefix
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    """Uygulama başlangıcında çalışacak"""
+    await create_indexes()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
