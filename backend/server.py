@@ -286,6 +286,10 @@ async def get_question_history():
     """Soru-cevap geçmişini getir"""
     try:
         questions = await db.questions.find().sort("timestamp", -1).to_list(100)
+        # Convert ObjectId to string for JSON serialization
+        for question in questions:
+            if '_id' in question:
+                question['_id'] = str(question['_id'])
         return questions
     except Exception as e:
         logger.error(f"Soru geçmişi getirme hatası: {str(e)}")
