@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
-import aiofiles
+
 import PyPDF2
 from docx import Document
 from io import BytesIO
