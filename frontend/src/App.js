@@ -26,7 +26,6 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [adminView, setAdminView] = useState('upload'); // upload, documents, analytics
-  const [keysPressed, setKeysPressed] = useState(new Set());
   const { toast } = useToast();
 
   // Admin toggle kombinasyonları
