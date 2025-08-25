@@ -517,7 +517,18 @@ async def get_chat_messages(chat_id: str, current_user: dict = Depends(get_curre
         {"chat_id": chat_id}
     ).sort("timestamp", 1).to_list(1000)
     
-    return messages
+    # ObjectId'leri kaldır ve sadece gerekli alanları döndür
+    result = []
+    for msg in messages:
+        result.append({
+            "id": msg["id"],
+            "chat_id": msg["chat_id"],
+            "type": msg["type"],
+            "content": msg["content"],
+            "timestamp": msg["timestamp"]
+        })
+    
+    return result
 
 @api_router.post("/ask")
 async def ask_question(request: QuestionRequest, current_user: dict = Depends(get_current_user)):
