@@ -588,6 +588,92 @@ async def get_chat_messages(chat_id: str, current_user: dict = Depends(get_curre
     
     return result
 
+@api_router.post("/ask-image")
+async def ask_image(
+    file: UploadFile = File(...),
+    question: str = "",
+    chat_id: str = "",
+    current_user: dict = Depends(get_current_user)
+):
+    """Fotoğraf yükleme ve işleme"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Oturum açmanız gerekiyor")
+    
+    try:
+        # Desteklenen dosya tiplerini kontrol et
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400, 
+                detail="Sadece JPEG, PNG ve WebP formatları destekleniyor."
+            )
+        
+        # Dosya boyutu kontrolü (max 10MB)
+        file_bytes = await file.read()
+        if len(file_bytes) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Dosya boyutu 10MB'dan küçük olmalı.")
+        
+        # Fotoğrafı AI ile işle
+        ai_response = await process_image_with_vision(file_bytes, question if question else None)
+        
+        # Chat yoksa oluştur
+        if not chat_id:
+            # Yeni chat oluştur - başlık fotoğraf işleme olsun
+            chat_title = "Fotoğraf Analizi"
+            chat = ChatSession(user_id=current_user['id'], title=chat_title)
+            await db.chats.insert_one(chat.dict())
+            chat_id = chat.id
+        else:
+            # Mevcut chat'i güncelle
+            chat = await db.chats.find_one({"id": chat_id, "user_id": current_user['id']})
+            if not chat:
+                raise HTTPException(status_code=404, detail="Chat bulunamadı")
+            chat_title = chat['title']
+        
+        # Kullanıcı mesajını kaydet (fotoğraf + soru)
+        user_message_content = f"📸 Fotoğraf yükledi"
+        if question:
+            user_message_content += f" ve sordu: {question}"
+        
+        user_message = ChatMessage(
+            chat_id=chat_id,
+            user_id=current_user['id'],
+            type='user',
+            content=user_message_content
+        )
+        await db.chat_messages.insert_one(user_message.dict())
+        
+        # AI cevabını kaydet
+        ai_message = ChatMessage(
+            chat_id=chat_id,
+            user_id=current_user['id'],
+            type='assistant',
+            content=ai_response
+        )
+        await db.chat_messages.insert_one(ai_message.dict())
+        
+        # Chat'i güncelle
+        await db.chats.update_one(
+            {"id": chat_id},
+            {
+                "$set": {"updated_at": datetime.now(timezone.utc)},
+                "$inc": {"message_count": 2}
+            }
+        )
+        
+        return QuestionResponse(
+            answer=ai_response,
+            chat_id=chat_id,
+            chat_title=chat_title
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Fotoğraf işleme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fotoğraf işlenemedi: {str(e)}")
+
+
 @api_router.delete("/chat/{chat_id}")
 async def delete_chat(chat_id: str, current_user: dict = Depends(get_current_user)):
     """Chat silme"""
