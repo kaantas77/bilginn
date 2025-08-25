@@ -902,7 +902,7 @@ function App() {
                   <Button
                     onClick={handleAskQuestion}
                     disabled={isAsking || !currentQuestion.trim()}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 self-end"
+                    className="px-4 py-2 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm self-end"
                   >
                     {isAsking ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
