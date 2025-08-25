@@ -887,10 +887,10 @@ function App() {
               <div className="max-w-4xl mx-auto">
                 <div className="flex space-x-3">
                   <Textarea
-                    placeholder="Ne merak ediyorsun? Sor bana! 😊"
+                    placeholder="Ne merak ediyorsun? Sor bana!"
                     value={currentQuestion}
                     onChange={(e) => setCurrentQuestion(e.target.value)}
-                    className="flex-1 min-h-[50px] max-h-[120px] bg-gray-900 border-gray-700 text-white placeholder-gray-400 resize-none"
+                    className="flex-1 min-h-[50px] max-h-[120px] bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white placeholder-gray-400 resize-none"
                     disabled={isAsking}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
