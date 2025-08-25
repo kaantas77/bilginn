@@ -218,6 +218,8 @@ function App() {
 
   // Chat seç
   const handleSelectChat = async (chatId) => {
+    if (chatId === currentChatId) return; // Aynı chat'e tıklandıysa hiçbir şey yapma
+    
     setCurrentChatId(chatId);
     await loadChatMessages(chatId);
   };
