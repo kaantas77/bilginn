@@ -780,7 +780,8 @@ function App() {
 
       {/* Alt bilgi */}
       <div className="absolute bottom-4 right-4 text-xs text-gray-600">
-        Alt+A: Admin Panel
+        <div>Alt+A: Mini Panel</div>
+        <div>Alt+Tab+H: Admin Panel</div>
       </div>
     </div>
   );
