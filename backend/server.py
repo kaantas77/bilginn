@@ -152,13 +152,13 @@ Fotoğrafta:
 - Genel bilgi sorusu varsa cevapla
 - Sadece yazı varsa yazıları döndür"""
         
+        # ImageContent ile base64 image gönder
+        image_content = ImageContent(image_base64=base64_image)
+        
         # Vision mesajı oluştur - emergentintegrations'a uygun format
         user_message = UserMessage(
             text=prompt,
-            images=[{
-                "type": "base64",
-                "data": base64_image
-            }]
+            file_contents=[image_content]
         )
         
         response = await chat.send_message(user_message)
