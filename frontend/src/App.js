@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
-import { Send, Loader2, Upload, Settings, X, MessageCircle, Shield, FileText, BarChart3, Trash2, Eye, Calendar } from "lucide-react";
+import { Send, Loader2, Upload, Settings, X, MessageCircle, Shield, FileText, BarChart3, User, LogOut, Plus, History } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
@@ -15,67 +15,204 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 function App() {
+  // Auth states
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [authLoading, setAuthLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  
+  // Auth form states
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '' });
+  
+  // Chat states
+  const [currentChatId, setCurrentChatId] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isAsking, setIsAsking] = useState(false);
-  const [conversation, setConversation] = useState([]);
-  const [showChatInterface, setShowChatInterface] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
+  
+  // Admin states
   const [showFullAdminPanel, setShowFullAdminPanel] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminView, setAdminView] = useState('upload');
   const [isUploading, setIsUploading] = useState(false);
   const [documents, setDocuments] = useState([]);
-  const [adminView, setAdminView] = useState('upload'); // upload, documents, analytics
+  
   const { toast } = useToast();
 
-  // Admin toggle kombinasyonları
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      // Alt+A kombinasyonu (eski mini admin panel)
-      if (event.altKey && event.key === 'a') {
-        setShowAdminPanel(prev => !prev);
-      }
-      
-      // Alt+Tab+H kombinasyonu (yeni full admin panel)
-      if (event.altKey && event.key === 'Tab') {
-        event.preventDefault(); // Tab'ın varsayılan davranışını engelle
-      }
-      
-      if (event.altKey && event.key === 'h') {
-        setShowFullAdminPanel(true);
-        setShowAdminPanel(false);
-        event.preventDefault();
-      }
-    };
+  // Token yönetimi
+  const getToken = () => localStorage.getItem('bilgin_token');
+  const setToken = (token) => localStorage.setItem('bilgin_token', token);
+  const removeToken = () => localStorage.removeItem('bilgin_token');
 
-    window.addEventListener('keydown', handleKeyDown);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+  // API header'ları
+  const getAuthHeaders = () => {
+    const token = getToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  // Session kontrolü
+  useEffect(() => {
+    checkSession();
   }, []);
 
-  // Belgeleri yükle
-  const loadDocuments = async () => {
+  const checkSession = async () => {
+    const token = getToken();
+    if (!token) {
+      setCheckingSession(false);
+      return;
+    }
+
     try {
-      const response = await axios.get(`${API}/documents`);
-      setDocuments(response.data);
+      const response = await axios.get(`${API}/check-session`, {
+        headers: getAuthHeaders()
+      });
+
+      if (response.data.valid) {
+        setIsAuthenticated(true);
+        setCurrentUser(response.data.user);
+        await loadChatHistory();
+      } else {
+        removeToken();
+      }
     } catch (error) {
-      console.error("Belgeler yüklenemedi:", error);
+      console.error("Session check error:", error);
+      removeToken();
+    } finally {
+      setCheckingSession(false);
     }
   };
 
-  useEffect(() => {
-    loadDocuments();
-  }, []);
-
-  // Ana soru sorma butonu - chat interface'i başlat
-  const handleStartChat = () => {
-    setShowChatInterface(true);
-    setConversation([]);
+  // Chat geçmişini yükle
+  const loadChatHistory = async () => {
+    try {
+      const response = await axios.get(`${API}/chats`, {
+        headers: getAuthHeaders()
+      });
+      setChatHistory(response.data);
+    } catch (error) {
+      console.error("Chat history load error:", error);
+    }
   };
 
-  // Soru sorma
+  // Chat mesajlarını yükle
+  const loadChatMessages = async (chatId) => {
+    try {
+      const response = await axios.get(`${API}/chat/${chatId}/messages`, {
+        headers: getAuthHeaders()
+      });
+      setChatMessages(response.data);
+    } catch (error) {
+      console.error("Chat messages load error:", error);
+      setChatMessages([]);
+    }
+  };
+
+  // Login
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+
+    try {
+      const response = await axios.post(`${API}/login`, loginData);
+      
+      setToken(response.data.token);
+      setIsAuthenticated(true);
+      setCurrentUser(response.data.user);
+      setLoginData({ email: '', password: '' });
+      
+      await loadChatHistory();
+      
+      toast({
+        title: "Hoş Geldin!",
+        description: `Merhaba ${response.data.user.name}! 😊`,
+      });
+    } catch (error) {
+      toast({
+        title: "Giriş Hatası",
+        description: error.response?.data?.detail || "Giriş yapılamadı",
+        variant: "destructive",
+      });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Register
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+
+    try {
+      const response = await axios.post(`${API}/register`, registerData);
+      
+      setToken(response.data.token);
+      setIsAuthenticated(true);
+      setCurrentUser(response.data.user);
+      setRegisterData({ name: '', email: '', password: '' });
+      
+      await loadChatHistory();
+      
+      toast({
+        title: "Kayıt Başarılı!",
+        description: `Hoş geldin ${response.data.user.name}! BİLGİN'e katıldığın için teşekkürler! 🎉`,
+      });
+    } catch (error) {
+      toast({
+        title: "Kayıt Hatası",
+        description: error.response?.data?.detail || "Kayıt oluşturulamadı",
+        variant: "destructive",
+      });
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Logout
+  const handleLogout = () => {
+    removeToken();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setChatHistory([]);
+    setChatMessages([]);
+    setCurrentChatId(null);
+    
+    toast({
+      title: "Çıkış Yapıldı",
+      description: "Görüşmek üzere! 👋",
+    });
+  };
+
+  // Yeni chat
+  const handleNewChat = async () => {
+    try {
+      const response = await axios.post(`${API}/chat/new`, {}, {
+        headers: getAuthHeaders()
+      });
+      
+      setCurrentChatId(response.data.chat_id);
+      setChatMessages([]);
+      await loadChatHistory();
+    } catch (error) {
+      console.error("New chat error:", error);
+      toast({
+        title: "Hata",
+        description: "Yeni sohbet oluşturulamadı",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Chat seç
+  const handleSelectChat = async (chatId) => {
+    setCurrentChatId(chatId);
+    await loadChatMessages(chatId);
+  };
+
+  // Soru sor
   const handleAskQuestion = async () => {
     if (!currentQuestion.trim()) {
       toast({
@@ -86,64 +223,62 @@ function App() {
       return;
     }
 
-    // Soruyu conversation'a ekle
-    const newQuestion = {
-      type: 'question',
-      content: currentQuestion,
-      timestamp: new Date()
-    };
-
-    setConversation(prev => [...prev, newQuestion]);
-    const questionToAsk = currentQuestion;
+    const questionText = currentQuestion;
     setCurrentQuestion("");
     setIsAsking(true);
 
+    // Kullanıcı mesajını UI'ye ekle
+    const userMessage = {
+      type: 'user',
+      content: questionText,
+      timestamp: new Date().toISOString()
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+
     try {
       const response = await axios.post(`${API}/ask`, {
-        question: questionToAsk
+        question: questionText,
+        chat_id: currentChatId
+      }, {
+        headers: getAuthHeaders()
       });
 
-      // Cevabı conversation'a ekle
-      const newAnswer = {
-        type: 'answer',
+      // AI cevabını UI'ye ekle
+      const aiMessage = {
+        type: 'assistant',
         content: response.data.answer,
-        relevant_document: response.data.relevant_document_name,
-        timestamp: new Date()
+        timestamp: new Date().toISOString()
       };
+      setChatMessages(prev => [...prev, aiMessage]);
 
-      setConversation(prev => [...prev, newAnswer]);
+      // Chat ID'yi güncelle (yeni chat ise)
+      if (!currentChatId) {
+        setCurrentChatId(response.data.chat_id);
+      }
 
-      toast({
-        title: "Cevap alındı",
-        description: "Sorunuz başarıyla cevaplanmıştır",
-      });
+      // Chat geçmişini güncelle
+      await loadChatHistory();
+
     } catch (error) {
-      console.error("Soru cevaplama hatası:", error);
+      console.error("Ask question error:", error);
       toast({
         title: "Hata",
         description: error.response?.data?.detail || "Soru cevaplanamadı",
         variant: "destructive",
       });
-      
-      // Hata mesajını conversation'a ekle
-      const errorMessage = {
-        type: 'error',
-        content: "Özür dilerim, şu anda sorunuzu cevaplayamıyorum. Lütfen tekrar deneyin.",
-        timestamp: new Date()
-      };
-      setConversation(prev => [...prev, errorMessage]);
     } finally {
       setIsAsking(false);
     }
   };
 
-  // Admin şifre kontrolü
+  // Admin panel fonksiyonları
   const handleAdminLogin = () => {
     if (adminPassword === "mugosko770329") {
       setIsAdminAuthenticated(true);
       setAdminPassword("");
+      loadDocuments();
       toast({
-        title: "Giriş Başarılı",
+        title: "Admin Girişi Başarılı",
         description: "Admin paneline hoş geldiniz!",
       });
     } else {
@@ -163,7 +298,18 @@ function App() {
     setAdminPassword("");
     setAdminView('upload');
   };
-  // Admin dosya yükleme (geliştirilmiş)
+
+  // Belgeler yükle
+  const loadDocuments = async () => {
+    try {
+      const response = await axios.get(`${API}/documents`);
+      setDocuments(response.data);
+    } catch (error) {
+      console.error("Documents load error:", error);
+    }
+  };
+
+  // Dosya yükleme
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -197,7 +343,7 @@ function App() {
       loadDocuments();
       event.target.value = '';
     } catch (error) {
-      console.error("Dosya yükleme hatası:", error);
+      console.error("File upload error:", error);
       toast({
         title: "Hata",
         description: error.response?.data?.detail || "Dosya yüklenemedi",
@@ -208,28 +354,34 @@ function App() {
     }
   };
 
-  // Sohbeti yeniden başlat
-  const handleNewChat = () => {
-    setConversation([]);
-    setCurrentQuestion("");
-  };
+  // Admin tuş kombinasyonu
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.altKey && event.key === 'h') {
+        setShowFullAdminPanel(true);
+        event.preventDefault();
+      }
+    };
 
-  // Ana sayfaya dön
-  const handleBackToHome = () => {
-    setShowChatInterface(false);
-    setConversation([]);
-    setCurrentQuestion("");
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('tr-TR');
-  };
+    // Sadece admin için dinle
+    if (isAuthenticated && currentUser?.email === 'admin@bilgin.com') {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAuthenticated, currentUser]);
 
   const formatTime = (date) => {
     return new Date(date).toLocaleTimeString('tr-TR', { 
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('tr-TR');
   };
 
   const formatFileSize = (bytes) => {
@@ -249,7 +401,19 @@ function App() {
     }
   };
 
-  // Admin paneli render ediliyorsa tüm ekranı kapla
+  // Session kontrol ediliyor
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>BİLGİN yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin panel render ediliyorsa
   if (showFullAdminPanel) {
     return (
       <div className="min-h-screen bg-black text-white">
@@ -294,9 +458,6 @@ function App() {
                     İptal
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 text-center">
-                  Alt+Tab+H ile açıldı
-                </p>
               </CardContent>
             </Card>
           </div>
@@ -316,19 +477,14 @@ function App() {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-400">
-                    {documents.length} belge yüklü
-                  </div>
-                  <Button
-                    onClick={handleCloseAdminPanel}
-                    variant="outline"
-                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Çıkış
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleCloseAdminPanel}
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Çıkış
+                </Button>
               </div>
             </div>
 
@@ -356,17 +512,6 @@ function App() {
                 >
                   <FileText className="h-4 w-4 inline mr-2" />
                   Belgeler ({documents.length})
-                </button>
-                <button
-                  onClick={() => setAdminView('analytics')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    adminView === 'analytics' 
-                      ? 'bg-red-600 text-white' 
-                      : 'text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  <BarChart3 className="h-4 w-4 inline mr-2" />
-                  Analitik
                 </button>
               </div>
             </div>
@@ -406,9 +551,6 @@ function App() {
                               <div className="text-center">
                                 <p className="text-lg text-white">Dosyaları buraya sürükleyin</p>
                                 <p className="text-sm text-gray-400">veya tıklayarak seçin</p>
-                                <p className="text-xs text-gray-500 mt-2">
-                                  Desteklenen: PDF, Word, TXT (Çoklu seçim desteklenir)
-                                </p>
                               </div>
                             </>
                           )}
@@ -421,13 +563,7 @@ function App() {
 
               {adminView === 'documents' && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-white">Yüklenen Belgeler</h2>
-                    <div className="text-sm text-gray-400">
-                      Toplam: {documents.length} belge
-                    </div>
-                  </div>
-
+                  <h2 className="text-2xl font-bold text-white">Yüklenen Belgeler</h2>
                   <div className="grid gap-4">
                     {documents.length === 0 ? (
                       <Card className="bg-gray-900 border-gray-700">
@@ -452,98 +588,12 @@ function App() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <Badge variant="secondary" className="bg-gray-700">
-                                  {doc.content_length} karakter
-                                </Badge>
-                              </div>
                             </div>
                           </CardContent>
                         </Card>
                       ))
                     )}
                   </div>
-                </div>
-              )}
-
-              {adminView === 'analytics' && (
-                <div className="space-y-6">
-                  <h2 className="text-2xl font-bold text-white">Sistem Analitikleri</h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="bg-gray-900 border-gray-700">
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                            <FileText className="h-6 w-6 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-white">{documents.length}</p>
-                            <p className="text-sm text-gray-400">Toplam Belge</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-gray-900 border-gray-700">
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                            <MessageCircle className="h-6 w-6 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-white">-</p>
-                            <p className="text-sm text-gray-400">Toplam Soru</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-gray-900 border-gray-700">
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-                            <BarChart3 className="h-6 w-6 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-2xl font-bold text-white">Aktif</p>
-                            <p className="text-sm text-gray-400">Sistem Durumu</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <Card className="bg-gray-900 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white">Dosya Tipleri</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {['pdf', 'docx', 'txt'].map(type => {
-                          const count = documents.filter(doc => doc.file_type === type).length;
-                          const percentage = documents.length > 0 ? (count / documents.length) * 100 : 0;
-                          return (
-                            <div key={type} className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-xl">{getFileIcon(type)}</span>
-                                <span className="text-white">{type.toUpperCase()}</span>
-                              </div>
-                              <div className="flex items-center space-x-3">
-                                <div className="w-24 bg-gray-700 rounded-full h-2">
-                                  <div 
-                                    className="bg-blue-600 h-2 rounded-full" 
-                                    style={{ width: `${percentage}%` }}
-                                  ></div>
-                                </div>
-                                <span className="text-sm text-gray-400 w-12">{count} adet</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
               )}
             </div>
@@ -553,226 +603,300 @@ function App() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
-      <Toaster />
-      
-      {/* Admin Panel */}
-      {showAdminPanel && (
-        <div className="fixed top-4 right-4 z-50">
-          <Card className="bg-gray-900 border-gray-700 w-80">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <Settings className="h-4 w-4 text-gray-400" />
-                  <span>Admin Panel</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAdminPanel(false)}
-                  className="h-6 w-6 p-0 text-gray-400 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+  // Auth ekranları
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <Toaster />
+        
+        {/* Logo */}
+        <div className="absolute top-8 left-8">
+          <h1 className="text-2xl font-bold text-white tracking-wider">
+            BİLGİN
+          </h1>
+        </div>
+
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <Card className="w-full max-w-md bg-gray-900 border-gray-700">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-white mb-2">
+                {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
               </CardTitle>
+              <p className="text-gray-400">
+                {authMode === 'login' 
+                  ? 'BİLGİN\'e hoş geldin! 😊' 
+                  : 'BİLGİN ailesine katıl! 🎉'
+                }
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">Toplam Belge:</span>
-                  <span className="text-sm font-medium">{documents.length}</span>
-                </div>
-                
-                <div className="border-t border-gray-700 pt-3">
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.txt"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="admin-upload"
-                    disabled={isUploading}
+            <CardContent>
+              {authMode === 'login' ? (
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <Input
+                    type="email"
+                    placeholder="E-posta adresin"
+                    value={loginData.email}
+                    onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    required
                   />
-                  <label
-                    htmlFor="admin-upload"
-                    className="flex items-center space-x-2 cursor-pointer p-2 rounded border border-gray-600 hover:border-gray-500 transition-colors"
+                  <Input
+                    type="password"
+                    placeholder="Şifren"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    disabled={authLoading}
                   >
-                    <Upload className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-300">
-                      {isUploading ? "Yükleniyor..." : "Dosya Yükle"}
-                    </span>
-                  </label>
-                </div>
+                    {authLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Giriş yapılıyor...
+                      </>
+                    ) : (
+                      'Giriş Yap'
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="Adın"
+                    value={registerData.name}
+                    onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    required
+                  />
+                  <Input
+                    type="email"
+                    placeholder="E-posta adresin"
+                    value={registerData.email}
+                    onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    required
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Şifren (en az 6 karakter)"
+                    value={registerData.password}
+                    onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    minLength="6"
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    disabled={authLoading}
+                  >
+                    {authLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Kayıt oluşturuluyor...
+                      </>
+                    ) : (
+                      'Kayıt Ol'
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              <Separator className="my-6" />
+
+              <Button
+                variant="ghost"
+                className="w-full text-gray-400 hover:text-white"
+                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+              >
+                {authMode === 'login' 
+                  ? 'Hesabın yok mu? Kayıt ol' 
+                  : 'Zaten hesabın var mı? Giriş yap'
+                }
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Ana uygulama (authenticated)
+  return (
+    <div className="min-h-screen bg-black text-white flex">
+      <Toaster />
+
+      {/* Sol Sidebar - Chat History */}
+      <div className="w-80 bg-gray-900 border-r border-gray-700 flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold text-white">BİLGİN</h1>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-white p-2"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <User className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">{currentUser?.name}</p>
+              <p className="text-xs text-gray-400">{currentUser?.email}</p>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleNewChat}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Yeni Sohbet
+          </Button>
+        </div>
+
+        {/* Chat History */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-2">
+            {chatHistory.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Henüz sohbet geçmişin yok</p>
+                <p className="text-xs">Yeni sohbet başlat!</p>
+              </div>
+            ) : (
+              chatHistory.map((chat) => (
+                <button
+                  key={chat.id}
+                  onClick={() => handleSelectChat(chat.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    currentChatId === chat.id
+                      ? 'bg-gray-700 border border-gray-600'
+                      : 'hover:bg-gray-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <MessageCircle className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-white truncate">
+                        {chat.title}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {formatDate(chat.updated_at)}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Ana İçerik */}
+      <div className="flex-1 flex flex-col">
+        {!currentChatId && chatMessages.length === 0 ? (
+          // Hoşgeldin ekranı
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-4xl md:text-5xl font-light text-white mb-8">
+                Merhaba {currentUser?.name}, ne öğrenmek istersin? 😊
+              </h2>
+              <p className="text-gray-400 mb-8">
+                Yeni bir sohbet başlatmak için sol panelden "Yeni Sohbet" butonuna tıkla
+              </p>
+            </div>
+          </div>
+        ) : (
+          // Chat Interface
+          <div className="flex-1 flex flex-col">
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-4xl mx-auto space-y-4">
+                {chatMessages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[75%] rounded-xl p-4 ${
+                        message.type === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-white'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap leading-relaxed">
+                        {message.content}
+                      </div>
+                      <div className={`text-xs mt-2 ${
+                        message.type === 'user' ? 'text-blue-200' : 'text-gray-400'
+                      }`}>
+                        {formatTime(message.timestamp)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
                 
-                {documents.length > 0 && (
-                  <div className="border-t border-gray-700 pt-3">
-                    <p className="text-xs text-gray-400 mb-2">Son Yüklenen:</p>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {documents.slice(0, 3).map((doc, index) => (
-                        <div key={index} className="text-xs text-gray-300 truncate">
-                          {doc.filename}
-                        </div>
-                      ))}
+                {isAsking && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-800 text-white rounded-xl p-4">
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>BİLGİN düşünüyor...</span>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Logo */}
-      <div className="fixed top-8 left-8 z-100">
-        <h1 className="text-2xl font-bold text-white tracking-wider">
-          BİLGİN
-        </h1>
-      </div>
-
-      <div className="relative min-h-screen flex flex-col">
-        
-        {/* Ana İçerik - Hoşgeldin Ekranı */}
-        {!showChatInterface && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-8 animate-fadeIn">
-              <div className="space-y-4">
-                <h2 className="text-4xl md:text-6xl font-light text-white mb-8">
-                  Ne öğrenmek istersin?
-                </h2>
-                <Button
-                  onClick={handleStartChat}
-                  className="px-8 py-4 text-lg bg-white text-black hover:bg-gray-200 rounded-full transition-all duration-300 transform hover:scale-105"
-                >
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Sohbete Başla
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Chat Interface */}
-        {showChatInterface && (
-          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 pt-20">
-            
-            {/* Chat Header */}
-            <div className="flex items-center justify-between py-6 border-b border-gray-800">
-              <div className="flex items-center space-x-3">
-                <MessageCircle className="h-5 w-5 text-gray-400" />
-                <span className="text-lg font-medium">Sohbet</span>
-              </div>
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleNewChat}
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
-                >
-                  Temizle
-                </Button>
-                <Button
-                  onClick={handleBackToHome}
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
-                >
-                  Ana Sayfa
-                </Button>
-              </div>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto py-6 space-y-4">
-              {conversation.length === 0 && (
-                <div className="text-center text-gray-500 py-12">
-                  <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Sohbete başlamak için bir soru sorun</p>
-                </div>
-              )}
-              
-              {conversation.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.type === 'question' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-xl p-4 ${
-                      message.type === 'question'
-                        ? 'bg-white text-black'
-                        : message.type === 'error'
-                        ? 'bg-red-900 text-red-100'
-                        : 'bg-gray-800 text-white'
-                    }`}
-                  >
-                    <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
-                    
-                    {message.relevant_document && (
-                      <div className="mt-3 pt-3 border-t border-gray-600 text-xs text-gray-400">
-                        Kaynak: {message.relevant_document}
-                      </div>
-                    )}
-                    
-                    <div className={`text-xs mt-2 ${
-                      message.type === 'question' ? 'text-gray-600' : 'text-gray-500'
-                    }`}>
-                      {formatTime(message.timestamp)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {isAsking && (
-                <div className="flex justify-start animate-fadeIn">
-                  <div className="bg-gray-800 text-white rounded-xl p-4">
-                    <div className="flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Cevaplanıyor...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Chat Input */}
-            <div className="border-t border-gray-800 py-4">
-              <div className="flex space-x-3">
-                <Textarea
-                  placeholder="Merak ettiğiniz konuyu buraya yazın..."
-                  value={currentQuestion}
-                  onChange={(e) => setCurrentQuestion(e.target.value)}
-                  className="flex-1 min-h-[50px] max-h-[120px] bg-gray-900 border-gray-700 text-white placeholder-gray-400 resize-none"
-                  disabled={isAsking}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAskQuestion();
-                    }
-                  }}
-                />
-                <Button
-                  onClick={handleAskQuestion}
-                  disabled={isAsking || !currentQuestion.trim()}
-                  className="px-4 py-2 bg-white text-black hover:bg-gray-200 self-end"
-                >
-                  {isAsking ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
+            <div className="border-t border-gray-800 p-6">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex space-x-3">
+                  <Textarea
+                    placeholder="Ne merak ediyorsun? Sor bana! 😊"
+                    value={currentQuestion}
+                    onChange={(e) => setCurrentQuestion(e.target.value)}
+                    className="flex-1 min-h-[50px] max-h-[120px] bg-gray-900 border-gray-700 text-white placeholder-gray-400 resize-none"
+                    disabled={isAsking}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAskQuestion();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleAskQuestion}
+                    disabled={isAsking || !currentQuestion.trim()}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 self-end"
+                  >
+                    {isAsking ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Enter ile gönder, Shift+Enter ile yeni satır
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Enter ile gönder, Shift+Enter ile yeni satır
-              </p>
             </div>
           </div>
         )}
-      </div>
-
-      {/* Alt bilgi */}
-      <div className="absolute bottom-4 left-4 text-xs text-gray-600">
-        <div>Alt+A: Mini Panel</div>
-        <div>Alt+H: Admin Panel</div>
       </div>
     </div>
   );
