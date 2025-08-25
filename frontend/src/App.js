@@ -100,10 +100,12 @@ function App() {
 
   // Chat mesajlarını yükle
   const loadChatMessages = async (chatId) => {
+    console.log("Loading messages for chat:", chatId);
     try {
       const response = await axios.get(`${API}/chat/${chatId}/messages`, {
         headers: getAuthHeaders()
       });
+      console.log("Messages loaded:", response.data.length);
       setChatMessages(response.data);
     } catch (error) {
       console.error("Chat messages load error:", error);
