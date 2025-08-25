@@ -563,11 +563,14 @@ async def ask_question(request: QuestionRequest, current_user: dict = Depends(ge
         )
         await db.chat_messages.insert_one(ai_message.dict())
         
-        # Chat'i güncelle
+        # Chat'i güncelle ve title'ı güncelle
         await db.chats.update_one(
             {"id": chat_id},
             {
-                "$set": {"updated_at": datetime.now(timezone.utc)},
+                "$set": {
+                    "updated_at": datetime.now(timezone.utc),
+                    "title": chat_title if chat['message_count'] == 0 else chat['title']
+                },
                 "$inc": {"message_count": 2}
             }
         )
