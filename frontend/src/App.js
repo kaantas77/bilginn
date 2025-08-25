@@ -466,12 +466,12 @@ function App() {
 
     setIsAsking(true);
     
-    // UI'ye kullanıcı mesajını ekle
+    // UI'ye kullanıcı mesajını ekle (fotoğraf base64'ü ile birlikte)
     const userMessage = {
       type: 'user',
       content: `📸 Fotoğraf yükledi${imageQuestion ? ` ve sordu: ${imageQuestion}` : ''}`,
       timestamp: new Date().toISOString(),
-      hasImage: true
+      image_base64: selectedImage ? await convertFileToBase64(selectedImage) : null
     };
     setChatMessages(prev => [...prev, userMessage]);
 
