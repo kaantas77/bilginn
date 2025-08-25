@@ -617,6 +617,9 @@ async def ask_image(
         # Fotoğrafı AI ile işle
         ai_response = await process_image_with_vision(file_bytes, question if question else None)
         
+        # Base64 string'i kaydetmek için hazırla
+        base64_image = base64.b64encode(file_bytes).decode('utf-8')
+        
         # Chat yoksa veya boşsa oluştur
         if not chat_id or chat_id == "":
             # Yeni chat oluştur - başlık fotoğraf işleme olsun
