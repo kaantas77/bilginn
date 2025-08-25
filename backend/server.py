@@ -535,6 +535,12 @@ async def ask_question(request: QuestionRequest, current_user: dict = Depends(ge
             await db.chats.insert_one(chat.dict())
             chat_id = chat.id
         
+        # Yeni chat ise title oluştur
+        if chat['message_count'] == 0:
+            chat_title = await generate_chat_title(question)
+        else:
+            chat_title = chat['title']
+        
         # Kullanıcı mesajını kaydet
         user_message = ChatMessage(
             chat_id=chat_id,
