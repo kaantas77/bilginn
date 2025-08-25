@@ -19,6 +19,8 @@ import asyncio
 import jwt
 import bcrypt
 from email_validator import validate_email, EmailNotValidError
+import base64
+from PIL import Image
 
 
 ROOT_DIR = Path(__file__).parent
