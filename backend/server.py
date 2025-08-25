@@ -530,6 +530,34 @@ async def get_chat_messages(chat_id: str, current_user: dict = Depends(get_curre
     
     return result
 
+@api_router.delete("/chat/{chat_id}")
+async def delete_chat(chat_id: str, current_user: dict = Depends(get_current_user)):
+    """Chat silme"""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Oturum açmanız gerekiyor")
+    
+    # Chat ownership kontrolü
+    chat = await db.chats.find_one({"id": chat_id, "user_id": current_user['id']})
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat bulunamadı")
+    
+    try:
+        # Chat mesajlarını sil
+        await db.chat_messages.delete_many({"chat_id": chat_id})
+        
+        # Chat'i sil
+        result = await db.chats.delete_one({"id": chat_id, "user_id": current_user['id']})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Chat silinemedi")
+        
+        return {"message": "Sohbet başarıyla silindi", "deleted_chat_id": chat_id}
+        
+    except Exception as e:
+        logger.error(f"Chat silme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail="Chat silinemedi")
+
+
 @api_router.post("/ask")
 async def ask_question(request: QuestionRequest, current_user: dict = Depends(get_current_user)):
     """Soru sorma"""
