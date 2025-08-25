@@ -624,15 +624,15 @@ function App() {
         </div>
 
         <div className="min-h-screen flex items-center justify-center px-4">
-          <Card className="w-full max-w-md bg-gray-900 border-gray-700">
+          <Card className="w-full max-w-md bg-black/80 backdrop-blur-sm border-gray-800/50">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl text-white mb-2">
                 {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
               </CardTitle>
               <p className="text-gray-400">
                 {authMode === 'login' 
-                  ? 'BİLGİN\'e hoş geldin! 😊' 
-                  : 'BİLGİN ailesine katıl! 🎉'
+                  ? 'BİLGİN\'e hoş geldin!' 
+                  : 'BİLGİN ailesine katıl!'
                 }
               </p>
             </CardHeader>
@@ -644,18 +644,18 @@ function App() {
                     placeholder="E-posta adresin"
                     value={loginData.email}
                     onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                    className="bg-gray-800 border-gray-600 text-white"
+                    className="bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white"
                   />
                   <Input
                     type="password"
                     placeholder="Şifren"
                     value={loginData.password}
                     onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                    className="bg-gray-800 border-gray-600 text-white"
+                    className="bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white"
                   />
                   <Button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm"
                     disabled={authLoading}
                   >
                     {authLoading ? (
@@ -672,10 +672,10 @@ function App() {
                 <form onSubmit={handleRegister} className="space-y-4">
                   <Input
                     type="text"
-                    placeholder="Adın"
+                    placeholder="Adın Soyadın"
                     value={registerData.name}
                     onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
-                    className="bg-gray-800 border-gray-600 text-white"
+                    className="bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white"
                     required
                   />
                   <Input
@@ -683,7 +683,7 @@ function App() {
                     placeholder="E-posta adresin"
                     value={registerData.email}
                     onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                    className="bg-gray-800 border-gray-600 text-white"
+                    className="bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white"
                     required
                   />
                   <Input
@@ -691,13 +691,13 @@ function App() {
                     placeholder="Şifren (en az 6 karakter)"
                     value={registerData.password}
                     onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
-                    className="bg-gray-800 border-gray-600 text-white"
+                    className="bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white"
                     minLength="6"
                     required
                   />
                   <Button
                     type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-green-600/80 hover:bg-green-700/80 backdrop-blur-sm"
                     disabled={authLoading}
                   >
                     {authLoading ? (
@@ -712,11 +712,11 @@ function App() {
                 </form>
               )}
 
-              <Separator className="my-6" />
+              <Separator className="my-6 bg-gray-700/50" />
 
               <Button
                 variant="ghost"
-                className="w-full text-gray-400 hover:text-white"
+                className="w-full text-gray-400 hover:text-white hover:bg-gray-800/50"
                 onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
               >
                 {authMode === 'login' 
