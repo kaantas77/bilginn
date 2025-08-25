@@ -854,7 +854,7 @@ function App() {
               <div className="animate-slideUp" style={{animationDelay: '0.6s'}}>
                 <Button
                   onClick={handleNewChat}
-                  className="px-8 py-4 text-lg bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm rounded-full transition-all duration-300 transform hover:scale-105"
+                  className="px-8 py-4 text-lg bg-black/80 hover:bg-gray-900/80 backdrop-blur-sm border border-gray-600 rounded-full transition-all duration-300 transform hover:scale-105"
                 >
                   Ayrıca yeni bir sohbet başlatmak için tıkla
                 </Button>
