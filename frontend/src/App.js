@@ -827,19 +827,21 @@ function App() {
         {!currentChatId && chatMessages.length === 0 ? (
           // Hoşgeldin ekranı
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-light text-white mb-4">
+            <div className="text-center animate-fadeIn">
+              <h2 className="text-4xl md:text-5xl font-light text-white mb-4 animate-slideUp">
                 Merhaba {formatName(currentUser?.name || '')}, ne öğrenmek istersin?
               </h2>
-              <p className="text-gray-400 mb-8">
+              <p className="text-gray-400 mb-8 animate-slideUp" style={{animationDelay: '0.3s'}}>
                 Merak ettiğin her şeyi sorabilirsin!
               </p>
-              <Button
-                onClick={handleNewChat}
-                className="px-8 py-4 text-lg bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm rounded-full transition-all duration-300"
-              >
-                Ayrıca yeni bir sohbet başlatmak için tıkla
-              </Button>
+              <div className="animate-slideUp" style={{animationDelay: '0.6s'}}>
+                <Button
+                  onClick={handleNewChat}
+                  className="px-8 py-4 text-lg bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm rounded-full transition-all duration-300 transform hover:scale-105"
+                >
+                  Ayrıca yeni bir sohbet başlatmak için tıkla
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
