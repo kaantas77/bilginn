@@ -763,7 +763,7 @@ function App() {
           </div>
           
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-blue-600/80 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-black/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-gray-600">
               <User className="h-4 w-4 text-white" />
             </div>
             <div>
