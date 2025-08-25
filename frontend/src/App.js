@@ -638,7 +638,6 @@ function App() {
                     value={loginData.email}
                     onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                     className="bg-gray-800 border-gray-600 text-white"
-                    required
                   />
                   <Input
                     type="password"
