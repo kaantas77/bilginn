@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
-import { Send, Loader2, Upload, Settings, X, MessageCircle, Shield, FileText, BarChart3, User, LogOut, Plus, History, Trash2 } from "lucide-react";
+import { Send, Loader2, Upload, Settings, X, MessageCircle, Shield, FileText, BarChart3, User, LogOut, Plus, History, Trash2, Camera, Image } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
