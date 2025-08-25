@@ -441,6 +441,8 @@ function App() {
       });
     }
   };
+
+  const formatTime = (date) => {
     return new Date(date).toLocaleTimeString('tr-TR', { 
       hour: '2-digit', 
       minute: '2-digit' 
