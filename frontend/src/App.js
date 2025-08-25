@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
-import { Send, Loader2, Upload, Settings, X, MessageCircle } from "lucide-react";
+import { Send, Loader2, Upload, Settings, X, MessageCircle, Shield, FileText, BarChart3, Trash2, Eye, Calendar } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Textarea } from "./components/ui/textarea";
+import { Badge } from "./components/ui/badge";
+import { Separator } from "./components/ui/separator";
 import { useToast } from "./hooks/use-toast";
 import { Toaster } from "./components/ui/toaster";
 
