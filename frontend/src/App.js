@@ -844,16 +844,18 @@ function App() {
               </div>
             ) : (
               chatHistory.map((chat) => (
-                <button
+                <div
                   key={chat.id}
-                  onClick={() => handleSelectChat(chat.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                  className={`group relative p-3 rounded-lg transition-colors ${
                     currentChatId === chat.id
                       ? 'bg-gray-700/60 border border-gray-600/50 backdrop-blur-sm'
                       : 'hover:bg-gray-800/40 backdrop-blur-sm'
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => handleSelectChat(chat.id)}
+                    className="w-full text-left flex items-center space-x-3"
+                  >
                     <MessageCircle className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-white truncate">
@@ -863,8 +865,20 @@ function App() {
                         {formatDate(chat.updated_at)}
                       </p>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  
+                  {/* Silme butonu - sadece hover'da görünür */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteChat(chat.id, chat.title);
+                    }}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-600/20"
+                    title="Sohbeti sil"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-400 hover:text-red-300" />
+                  </button>
+                </div>
               ))
             )}
           </div>
