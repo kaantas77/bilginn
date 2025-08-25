@@ -14,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 import PyPDF2
 from docx import Document
 from io import BytesIO
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 import asyncio
 import jwt
 import bcrypt
