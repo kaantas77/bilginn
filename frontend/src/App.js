@@ -270,11 +270,26 @@ function App() {
 
       // Chat geçmişini güncelle ve title'ı güncelle
       setChatHistory(prevHistory => {
-        return prevHistory.map(chat => 
+        const updatedHistory = prevHistory.map(chat => 
           chat.id === response.data.chat_id 
             ? { ...chat, title: response.data.chat_title, updated_at: new Date().toISOString() }
             : chat
         );
+        
+        // Eğer yeni chat ise ve listede yoksa ekle
+        const chatExists = updatedHistory.some(chat => chat.id === response.data.chat_id);
+        if (!chatExists) {
+          const newChat = {
+            id: response.data.chat_id,
+            title: response.data.chat_title,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            message_count: 2
+          };
+          return [newChat, ...updatedHistory];
+        }
+        
+        return updatedHistory;
       });
 
     } catch (error) {
