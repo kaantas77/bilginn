@@ -650,7 +650,8 @@ async def ask_image(
             chat_id=chat_id,
             user_id=current_user['id'],
             type='user',
-            content=user_message_content
+            content=user_message_content,
+            image_base64=base64_image  # Fotoğrafı kaydet
         )
         await db.chat_messages.insert_one(user_message.dict())
         
