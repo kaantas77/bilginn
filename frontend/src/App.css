@@ -79,7 +79,8 @@ body {
 }
 
 .animate-slideUp {
-  animation: slideUp 0.5s ease-out;
+  animation: slideUp 0.8s ease-out;
+  animation-fill-mode: both;
 }
 
 .animate-slideDown {
