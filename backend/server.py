@@ -118,6 +118,62 @@ class DocumentModel(BaseModel):
     file_type: str
     upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+async def process_image_with_vision(image_bytes: bytes, user_question: str = None) -> str:
+    """OpenAI Vision ile fotoğraf işleme ve yazı okuma"""
+    try:
+        # Fotoğrafı base64'e çevir
+        base64_image = base64.b64encode(image_bytes).decode('utf-8')
+        
+        # OpenAI Vision için system message
+        system_message = """Sen BİLGİN adlı akıllı bir AI asistanısın. Fotoğraflardaki yazıları okur ve soruları cevaplayabilirsin.
+
+Görevin:
+1. Fotoğraftaki tüm yazıları dikkatli oku
+2. Eğer matematik, fizik, kimya vs. soru varsa çöz
+3. Eğer sadece yazı okuma isteniyorsa yazıları döndür
+4. Türkçe yanıtla, net ve anlaşılır ol"""
+
+        chat = LlmChat(
+            api_key=os.environ.get('EMERGENT_LLM_KEY'),
+            session_id=str(uuid.uuid4()),
+            system_message=system_message
+        ).with_model("openai", "gpt-4o")  # Vision için gpt-4o kullan
+        
+        if user_question:
+            prompt = f"""Bu fotoğraftaki yazıları oku ve şu soruyu cevapla: {user_question}
+
+Fotoğraftaki yazıları okuduktan sonra soruyu yanıtla."""
+        else:
+            prompt = """Bu fotoğraftaki tüm yazıları oku ve eğer soru varsa çöz.
+
+Fotoğrafta:
+- Yazıları tam olarak oku
+- Matematik/fizik/kimya sorusu varsa çöz
+- Genel bilgi sorusu varsa cevapla
+- Sadece yazı varsa yazıları döndür"""
+        
+        # Vision mesajı oluştur - emergentintegrations'a uygun format
+        user_message = UserMessage(
+            text=prompt,
+            images=[{
+                "type": "base64",
+                "data": base64_image
+            }]
+        )
+        
+        response = await chat.send_message(user_message)
+        return response
+        
+    except Exception as e:
+        logger.error(f"Fotoğraf işleme hatası: {str(e)}")
+        return f"Fotoğraf işlenirken hata oluştu: {str(e)}"
+
+
+class ImageRequest(BaseModel):
+    question: str = ""
+    chat_id: Optional[str] = None
+
+
 class QuestionRequest(BaseModel):
     question: str
     chat_id: Optional[str] = None
