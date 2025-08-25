@@ -171,6 +171,7 @@ function App() {
     setAdminView('upload');
   };
   // Admin dosya yükleme (geliştirilmiş)
+  const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
