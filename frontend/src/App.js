@@ -465,6 +465,11 @@ function App() {
     setSelectedImage(null);
     setImagePreview("");
     setImageQuestion("");
+    // File input'u da temizle
+    const fileInput = document.getElementById('image-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   // Fotoğraf ile soru sorma
