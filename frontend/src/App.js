@@ -27,16 +27,39 @@ function App() {
   const [keysPressed, setKeysPressed] = useState(new Set());
   const { toast } = useToast();
 
-  // Admin toggle (Alt+A tuşu kombinasyonu)
+  // Admin toggle kombinasyonları
   useEffect(() => {
     const handleKeyDown = (event) => {
+      setKeysPressed(prev => new Set(prev).add(event.code));
+      
+      // Alt+A kombinasyonu (eski mini admin panel)
       if (event.altKey && event.key === 'a') {
         setShowAdminPanel(prev => !prev);
       }
     };
 
+    const handleKeyUp = (event) => {
+      setKeysPressed(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(event.code);
+        
+        // Alt+Tab+H kombinasyonu kontrolü
+        if (newSet.has('AltLeft') && newSet.has('Tab') && newSet.has('KeyH')) {
+          setShowFullAdminPanel(true);
+          setShowAdminPanel(false);
+        }
+        
+        return newSet;
+      });
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   // Belgeleri yükle
