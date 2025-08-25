@@ -413,6 +413,137 @@ function App() {
     ).join(' ');
   };
 
+  // Fotoğraf yükleme
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Hata",
+        description: "Sadece fotoğraf dosyaları yükleyebilirsiniz",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Boyut kontrolü (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Hata", 
+        description: "Fotoğraf boyutu 10MB'dan küçük olmalı",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedImage(file);
+    
+    // Preview oluştur
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  // Fotoğraf silme
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview("");
+    setImageQuestion("");
+  };
+
+  // Fotoğraf ile soru sorma
+  const handleAskWithImage = async () => {
+    if (!selectedImage) {
+      toast({
+        title: "Hata",
+        description: "Lütfen bir fotoğraf seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAsking(true);
+    
+    // UI'ye kullanıcı mesajını ekle
+    const userMessage = {
+      type: 'user',
+      content: `📸 Fotoğraf yükledi${imageQuestion ? ` ve sordu: ${imageQuestion}` : ''}`,
+      timestamp: new Date().toISOString(),
+      hasImage: true
+    };
+    setChatMessages(prev => [...prev, userMessage]);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedImage);
+      formData.append('question', imageQuestion);
+      formData.append('chat_id', currentChatId || '');
+
+      const response = await axios.post(`${API}/ask-image`, formData, {
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // AI cevabını UI'ye ekle
+      const aiMessage = {
+        type: 'assistant',
+        content: response.data.answer,
+        timestamp: new Date().toISOString()
+      };
+      setChatMessages(prev => [...prev, aiMessage]);
+
+      // Chat ID'yi güncelle (yeni chat ise)
+      if (!currentChatId) {
+        setCurrentChatId(response.data.chat_id);
+      }
+
+      // Chat geçmişini güncelle
+      setChatHistory(prevHistory => {
+        const updatedHistory = prevHistory.map(chat => 
+          chat.id === response.data.chat_id 
+            ? { ...chat, title: response.data.chat_title, updated_at: new Date().toISOString() }
+            : chat
+        );
+        
+        const chatExists = updatedHistory.some(chat => chat.id === response.data.chat_id);
+        if (!chatExists) {
+          const newChat = {
+            id: response.data.chat_id,
+            title: response.data.chat_title,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            message_count: 2
+          };
+          return [newChat, ...updatedHistory];
+        }
+        
+        return updatedHistory;
+      });
+
+      // Fotoğrafı temizle
+      handleRemoveImage();
+
+      toast({
+        title: "Başarı",
+        description: "Fotoğraf başarıyla analiz edildi",
+      });
+
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast({
+        title: "Hata",
+        description: error.response?.data?.detail || "Fotoğraf işlenemedi",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAsking(false);
+    }
+  };
+
   // Chat silme
   const handleDeleteChat = async (chatId, chatTitle) => {
     if (!confirm(`"${chatTitle}" sohbetini silmek istediğinize emin misiniz?`)) {
