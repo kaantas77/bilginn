@@ -251,7 +251,7 @@ function App() {
       )}
 
       {/* Logo */}
-      <div className="absolute top-8 left-8 z-10">
+      <div className="fixed top-8 left-8 z-100">
         <h1 className="text-2xl font-bold text-white tracking-wider">
           BİLGİN
         </h1>
