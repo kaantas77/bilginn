@@ -18,8 +18,13 @@ function App() {
   const [conversation, setConversation] = useState([]);
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showFullAdminPanel, setShowFullAdminPanel] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [documents, setDocuments] = useState([]);
+  const [adminView, setAdminView] = useState('upload'); // upload, documents, analytics
+  const [keysPressed, setKeysPressed] = useState(new Set());
   const { toast } = useToast();
 
   // Admin toggle (Alt+A tuşu kombinasyonu)
