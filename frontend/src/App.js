@@ -32,35 +32,27 @@ function App() {
   // Admin toggle kombinasyonları
   useEffect(() => {
     const handleKeyDown = (event) => {
-      setKeysPressed(prev => new Set(prev).add(event.code));
-      
       // Alt+A kombinasyonu (eski mini admin panel)
       if (event.altKey && event.key === 'a') {
         setShowAdminPanel(prev => !prev);
       }
-    };
-
-    const handleKeyUp = (event) => {
-      setKeysPressed(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(event.code);
-        
-        // Alt+Tab+H kombinasyonu kontrolü
-        if (newSet.has('AltLeft') && newSet.has('Tab') && newSet.has('KeyH')) {
-          setShowFullAdminPanel(true);
-          setShowAdminPanel(false);
-        }
-        
-        return newSet;
-      });
+      
+      // Alt+Tab+H kombinasyonu (yeni full admin panel)
+      if (event.altKey && event.key === 'Tab') {
+        event.preventDefault(); // Tab'ın varsayılan davranışını engelle
+      }
+      
+      if (event.altKey && event.key === 'h') {
+        setShowFullAdminPanel(true);
+        setShowAdminPanel(false);
+        event.preventDefault();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
