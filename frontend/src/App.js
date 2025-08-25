@@ -883,7 +883,7 @@ function App() {
             </div>
 
             {/* Chat Input */}
-            <div className="border-t border-gray-800 p-6">
+            <div className="border-t border-gray-800/50 backdrop-blur-sm p-6">
               <div className="max-w-4xl mx-auto">
                 <div className="flex space-x-3">
                   <Textarea
