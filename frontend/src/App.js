@@ -195,7 +195,17 @@ function App() {
       
       setCurrentChatId(response.data.chat_id);
       setChatMessages([]);
-      await loadChatHistory();
+      
+      // Yeni chat'i hemen listeye ekle
+      const newChat = {
+        id: response.data.chat_id,
+        title: response.data.title,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        message_count: 0
+      };
+      setChatHistory(prev => [newChat, ...prev]);
+      
     } catch (error) {
       console.error("New chat error:", error);
       toast({
