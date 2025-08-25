@@ -281,7 +281,7 @@ function App() {
 
         {/* Chat Interface */}
         {showChatInterface && (
-          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4">
+          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 pt-20">
             
             {/* Chat Header */}
             <div className="flex items-center justify-between py-6 border-b border-gray-800">
@@ -324,7 +324,7 @@ function App() {
                   className={`flex ${message.type === 'question' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-xl p-4 ${
+                    className={`max-w-[75%] rounded-xl p-4 ${
                       message.type === 'question'
                         ? 'bg-white text-black'
                         : message.type === 'error'
@@ -332,7 +332,7 @@ function App() {
                         : 'bg-gray-800 text-white'
                     }`}
                   >
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
                     
                     {message.relevant_document && (
                       <div className="mt-3 pt-3 border-t border-gray-600 text-xs text-gray-400">
