@@ -737,9 +737,9 @@ function App() {
       <Toaster />
 
       {/* Sol Sidebar - Chat History */}
-      <div className="w-80 bg-gray-900 border-r border-gray-700 flex flex-col">
+      <div className="w-80 bg-gray-900/50 backdrop-blur-sm border-r border-gray-700/50 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-700">
+        <div className="p-4 border-b border-gray-700/50">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-bold text-white">BİLGİN</h1>
             <Button
@@ -753,18 +753,18 @@ function App() {
           </div>
           
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-600/80 backdrop-blur-sm rounded-full flex items-center justify-center">
               <User className="h-4 w-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-medium text-white">{currentUser?.name}</p>
+              <p className="text-sm font-medium text-white">{formatName(currentUser?.name || '')}</p>
               <p className="text-xs text-gray-400">{currentUser?.email}</p>
             </div>
           </div>
 
           <Button
             onClick={handleNewChat}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm"
           >
             <Plus className="h-4 w-4 mr-2" />
             Yeni Sohbet
@@ -787,8 +787,8 @@ function App() {
                   onClick={() => handleSelectChat(chat.id)}
                   className={`w-full text-left p-3 rounded-lg transition-colors ${
                     currentChatId === chat.id
-                      ? 'bg-gray-700 border border-gray-600'
-                      : 'hover:bg-gray-800'
+                      ? 'bg-gray-700/60 border border-gray-600/50 backdrop-blur-sm'
+                      : 'hover:bg-gray-800/40 backdrop-blur-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
