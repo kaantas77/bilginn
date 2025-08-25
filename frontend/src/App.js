@@ -380,6 +380,13 @@ function App() {
     ).join(' ');
   };
 
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString('tr-TR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('tr-TR');
   };
