@@ -413,6 +413,20 @@ function App() {
     ).join(' ');
   };
 
+  // Helper function for base64 conversion
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Remove data:image/jpeg;base64, prefix
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
   // Fotoğraf yükleme
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
