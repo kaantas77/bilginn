@@ -230,12 +230,330 @@ function App() {
     setCurrentQuestion("");
   };
 
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString('tr-TR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('tr-TR');
   };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (fileType) => {
+    switch (fileType) {
+      case 'pdf': return '📄';
+      case 'docx': return '📝';
+      case 'txt': return '📋';
+      default: return '📄';
+    }
+  };
+
+  // Admin paneli render ediliyorsa tüm ekranı kapla
+  if (showFullAdminPanel) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <Toaster />
+        
+        {!isAdminAuthenticated ? (
+          // Admin Login
+          <div className="min-h-screen flex items-center justify-center">
+            <Card className="w-96 bg-gray-900 border-gray-700">
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 bg-red-900 rounded-full flex items-center justify-center mb-4">
+                  <Shield className="h-8 w-8 text-red-400" />
+                </div>
+                <CardTitle className="text-xl text-white">Admin Paneli</CardTitle>
+                <p className="text-gray-400">Erişim için şifre gerekli</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Input
+                  type="password"
+                  placeholder="Admin şifresi..."
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAdminLogin();
+                    }
+                  }}
+                />
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleAdminLogin}
+                    className="flex-1 bg-red-600 hover:bg-red-700"
+                  >
+                    Giriş Yap
+                  </Button>
+                  <Button
+                    onClick={handleCloseAdminPanel}
+                    variant="outline"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    İptal
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  Alt+Tab+H ile açıldı
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          // Admin Dashboard
+          <div className="min-h-screen">
+            {/* Admin Header */}
+            <div className="bg-gray-900 border-b border-gray-700 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-white">BİLGİN Admin Panel</h1>
+                    <p className="text-sm text-gray-400">Sistem Yönetimi</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="text-sm text-gray-400">
+                    {documents.length} belge yüklü
+                  </div>
+                  <Button
+                    onClick={handleCloseAdminPanel}
+                    variant="outline"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Çıkış
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Navigation */}
+            <div className="bg-gray-800 px-6 py-3 border-b border-gray-700">
+              <div className="flex space-x-6">
+                <button
+                  onClick={() => setAdminView('upload')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    adminView === 'upload' 
+                      ? 'bg-red-600 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Upload className="h-4 w-4 inline mr-2" />
+                  Dosya Yükle
+                </button>
+                <button
+                  onClick={() => setAdminView('documents')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    adminView === 'documents' 
+                      ? 'bg-red-600 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <FileText className="h-4 w-4 inline mr-2" />
+                  Belgeler ({documents.length})
+                </button>
+                <button
+                  onClick={() => setAdminView('analytics')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    adminView === 'analytics' 
+                      ? 'bg-red-600 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <BarChart3 className="h-4 w-4 inline mr-2" />
+                  Analitik
+                </button>
+              </div>
+            </div>
+
+            {/* Admin Content */}
+            <div className="p-6">
+              {adminView === 'upload' && (
+                <div className="max-w-4xl">
+                  <Card className="bg-gray-900 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-white">Dosya Yükleme</CardTitle>
+                      <p className="text-gray-400">PDF, Word, TXT dosyalarını sisteme yükleyin</p>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="border-2 border-dashed border-gray-600 rounded-lg p-8">
+                        <input
+                          type="file"
+                          accept=".pdf,.docx,.txt"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="admin-file-upload"
+                          disabled={isUploading}
+                          multiple
+                        />
+                        <label
+                          htmlFor="admin-file-upload"
+                          className="cursor-pointer flex flex-col items-center space-y-4"
+                        >
+                          {isUploading ? (
+                            <div className="flex items-center space-x-2 text-blue-400">
+                              <Loader2 className="h-8 w-8 animate-spin" />
+                              <span className="text-lg">Yükleniyor...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="h-16 w-16 text-gray-400" />
+                              <div className="text-center">
+                                <p className="text-lg text-white">Dosyaları buraya sürükleyin</p>
+                                <p className="text-sm text-gray-400">veya tıklayarak seçin</p>
+                                <p className="text-xs text-gray-500 mt-2">
+                                  Desteklenen: PDF, Word, TXT (Çoklu seçim desteklenir)
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </label>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {adminView === 'documents' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-white">Yüklenen Belgeler</h2>
+                    <div className="text-sm text-gray-400">
+                      Toplam: {documents.length} belge
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4">
+                    {documents.length === 0 ? (
+                      <Card className="bg-gray-900 border-gray-700">
+                        <CardContent className="p-8 text-center">
+                          <FileText className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                          <p className="text-gray-400">Henüz belge yüklenmemiş</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      documents.map((doc, index) => (
+                        <Card key={index} className="bg-gray-900 border-gray-700">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <div className="text-2xl">{getFileIcon(doc.file_type)}</div>
+                                <div>
+                                  <h3 className="font-medium text-white">{doc.filename}</h3>
+                                  <div className="flex items-center space-x-4 text-sm text-gray-400">
+                                    <span>Tip: {doc.file_type.toUpperCase()}</span>
+                                    <span>Boyut: {formatFileSize(doc.content_length || 0)}</span>
+                                    <span>Tarih: {formatDate(doc.upload_date)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant="secondary" className="bg-gray-700">
+                                  {doc.content_length} karakter
+                                </Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {adminView === 'analytics' && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-white">Sistem Analitikleri</h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card className="bg-gray-900 border-gray-700">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-white">{documents.length}</p>
+                            <p className="text-sm text-gray-400">Toplam Belge</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gray-900 border-gray-700">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                            <MessageCircle className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-white">-</p>
+                            <p className="text-sm text-gray-400">Toplam Soru</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gray-900 border-gray-700">
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                            <BarChart3 className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-white">Aktif</p>
+                            <p className="text-sm text-gray-400">Sistem Durumu</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="bg-gray-900 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-white">Dosya Tipleri</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {['pdf', 'docx', 'txt'].map(type => {
+                          const count = documents.filter(doc => doc.file_type === type).length;
+                          const percentage = documents.length > 0 ? (count / documents.length) * 100 : 0;
+                          return (
+                            <div key={type} className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-xl">{getFileIcon(type)}</span>
+                                <span className="text-white">{type.toUpperCase()}</span>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <div className="w-24 bg-gray-700 rounded-full h-2">
+                                  <div 
+                                    className="bg-blue-600 h-2 rounded-full" 
+                                    style={{ width: `${percentage}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm text-gray-400 w-12">{count} adet</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
