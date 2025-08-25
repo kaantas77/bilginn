@@ -575,7 +575,7 @@ async def ask_question(request: QuestionRequest, current_user: dict = Depends(ge
             {
                 "$set": {
                     "updated_at": datetime.now(timezone.utc),
-                    "title": chat_title if chat['message_count'] == 0 else chat['title']
+                    "title": chat_title
                 },
                 "$inc": {"message_count": 2}
             }
