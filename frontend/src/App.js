@@ -144,7 +144,32 @@ function App() {
     }
   };
 
-  // Admin dosya yükleme
+  // Admin şifre kontrolü
+  const handleAdminLogin = () => {
+    if (adminPassword === "mugosko770329") {
+      setIsAdminAuthenticated(true);
+      setAdminPassword("");
+      toast({
+        title: "Giriş Başarılı",
+        description: "Admin paneline hoş geldiniz!",
+      });
+    } else {
+      toast({
+        title: "Hata",
+        description: "Yanlış şifre!",
+        variant: "destructive",
+      });
+      setAdminPassword("");
+    }
+  };
+
+  // Admin paneli kapatma
+  const handleCloseAdminPanel = () => {
+    setShowFullAdminPanel(false);
+    setIsAdminAuthenticated(false);
+    setAdminPassword("");
+    setAdminView('upload');
+  };
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
