@@ -110,6 +110,7 @@ class ChatMessage(BaseModel):
     type: str  # 'user' or 'assistant'
     content: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    image_base64: Optional[str] = None  # Fotoğraf için
 
 class DocumentModel(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
