@@ -478,8 +478,10 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('file', selectedImage);
-      formData.append('question', imageQuestion);
-      formData.append('chat_id', currentChatId || '');
+      formData.append('question', imageQuestion || '');
+      if (currentChatId) {
+        formData.append('chat_id', currentChatId);
+      }
 
       const response = await axios.post(`${API}/ask-image`, formData, {
         headers: {
