@@ -170,7 +170,7 @@ function App() {
     setAdminPassword("");
     setAdminView('upload');
   };
-  const handleFileUpload = async (event) => {
+  // Admin dosya yükleme (geliştirilmiş)
     const file = event.target.files[0];
     if (!file) return;
 
