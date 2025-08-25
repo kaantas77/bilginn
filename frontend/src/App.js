@@ -815,12 +815,18 @@ function App() {
           // Hoşgeldin ekranı
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-light text-white mb-8">
-                Merhaba {currentUser?.name}, ne öğrenmek istersin? 😊
+              <h2 className="text-4xl md:text-5xl font-light text-white mb-4">
+                Merhaba {formatName(currentUser?.name || '')}, ne öğrenmek istersin?
               </h2>
               <p className="text-gray-400 mb-8">
-                Yeni bir sohbet başlatmak için sol panelden "Yeni Sohbet" butonuna tıkla
+                Merak ettiğin her şeyi sorabilirsin!
               </p>
+              <Button
+                onClick={handleNewChat}
+                className="px-8 py-4 text-lg bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm rounded-full transition-all duration-300"
+              >
+                Yeni bir sohbet başlatmak için tıkla
+              </Button>
             </div>
           </div>
         ) : (
