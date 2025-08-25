@@ -835,7 +835,7 @@ function App() {
                 onClick={handleNewChat}
                 className="px-8 py-4 text-lg bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm rounded-full transition-all duration-300"
               >
-                Yeni bir sohbet başlatmak için tıkla
+                Ayrıca yeni bir sohbet başlatmak için tıkla
               </Button>
             </div>
           </div>
