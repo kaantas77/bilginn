@@ -273,19 +273,30 @@ async def generate_chat_title(first_message: str) -> str:
         return "Yeni Sohbet"
 
 async def get_ai_answer(question: str, chat_context: str = "", document_content: str = None):
-    """AI'dan arkadaş canlısı cevap alma"""
+    """AI'dan akıllı ve uygun cevap alma"""
     try:
-        system_message = """Sen BİLGİN adlı arkadaş canlısı bir AI asistanısın. Özellikleriniz:
+        system_message = """Sen BİLGİN adlı akıllı bir AI asistanısın. Davranış kuralların:
 
-- Sıcak, samimi ve arkadaş canlısı bir tonla konuş
-- "Sen" diye hitap et, resmi olmayan dil kullan
-- Emoji kullanabilirsin ama abartma (😊, 🤔, 💡 gibi)
-- Kısa, net ve anlaşılır cevaplar ver
-- Eğer daha önce bu kişiyle sohbet etmişsen, bunu hatırla
-- Sadece bilgi verme, sohbet et ve arkadaşlık kur
-- Başlık, numara, yıldız işareti kullanma
+ARKADAŞ CANLISI DURUMLAR (emoji kullan, samimi ol):
+- Selamlaşma (merhaba, selam, nasılsın)
+- Teşekkür, övgü, şaka
+- Kişisel sorular (adın ne, kimsin)
+
+NORMAL EĞİTİM DURUMLARI (profesyonel ol, emoji kullanma):
+- Akademik sorular
+- Bilgi talebi
+- Ders konuları
+- Araştırma soruları
+
+CEVAP UZUNLUĞU:
+- Normal: Kısa ve net (2-3 cümle)
+- "Uzun", "detaylı", "geniş" istenirse: Kapsamlı açıklama
+- "Örnekle", "açıkla" istenirse: Örneklerle destekle
+
+ASLA YAPMA:
+- Her cevaba emoji ekleme
 - Kaynak belirtme
-- Doğal ve akıcı konuş"""
+- Başlık ve numaralandırma kullanma"""
         
         chat = LlmChat(
             api_key=os.environ.get('EMERGENT_LLM_KEY'),
@@ -302,7 +313,15 @@ async def get_ai_answer(question: str, chat_context: str = "", document_content:
             prompt_parts.append(f"Kaynak bilgiler:\n{document_content[:3000]}\n")
         
         prompt_parts.append(f"Kullanıcının sorusu: {question}")
-        prompt_parts.append("\nArkadaş canlısı ve sıcak bir şekilde cevap ver. Kaynak belirtme.")
+        
+        # Soru tipini analiz et ve uygun talimat ver
+        question_lower = question.lower()
+        if any(word in question_lower for word in ['merhaba', 'selam', 'nasıl', 'kimsin', 'adın', 'teşekkür']):
+            prompt_parts.append("\nBu arkadaş canlısı bir soru. Samimi ve emoji ile cevapla.")
+        elif any(word in question_lower for word in ['uzun', 'detaylı', 'geniş', 'kapsamlı', 'açıkla']):
+            prompt_parts.append("\nKullanıcı detaylı cevap istiyor. Kapsamlı açıklama yap.")
+        else:
+            prompt_parts.append("\nBu eğitim sorusu. Kısa, net ve profesyonel cevapla.")
         
         prompt = "\n".join(prompt_parts)
         
@@ -312,7 +331,7 @@ async def get_ai_answer(question: str, chat_context: str = "", document_content:
         return response
     except Exception as e:
         logger.error(f"AI cevap alma hatası: {str(e)}")
-        return "Üzgünüm, şu anda kafam biraz karışık. Biraz sonra tekrar dener misin? 😅"
+        return "Üzgünüm, şu anda kafam biraz karışık. Biraz sonra tekrar dener misin?"
 
 
 # Authentication Routes
