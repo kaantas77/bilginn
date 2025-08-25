@@ -779,13 +779,13 @@ function App() {
       </div>
 
       {/* Alt bilgi */}
-      <div className="absolute bottom-4 right-4 text-xs text-gray-600">
+      <div className="absolute bottom-4 left-4 text-xs text-gray-600">
         <div>Alt+A: Mini Panel</div>
         <div>Alt+Tab+H: Admin Panel</div>
         {/* Test butonu - geliştirme için */}
         <button 
           onClick={() => setShowFullAdminPanel(true)}
-          className="mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded opacity-30 hover:opacity-100"
+          className="mt-2 px-2 py-1 bg-red-600 text-white text-xs rounded opacity-50 hover:opacity-100"
         >
           Admin Test
         </button>
