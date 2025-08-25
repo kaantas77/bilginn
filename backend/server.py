@@ -169,22 +169,24 @@ async def find_relevant_document(question: str):
 async def get_ai_answer(question: str, document_content: str = None):
     """AI'dan cevap alma"""
     try:
-        # Enhanced system message for learning and inference
-        system_message = """Sen BİLGİN adlı akıllı öğretim asistanısın. Görevin:
+        # Kısa ve net cevaplar için system message
+        system_message = """Sen BİLGİN adlı akıllı öğretim asistanısın. 
 
-1. ÖĞRENME: Sana verilen akademik makaleler, örnek sorular ve çözümlerden öğrenmek
-2. ÇIKARIM: Öğrendiklerinle benzer soruları çözmek ve yeni cevaplar üretmek  
-3. ÖĞRETME: Kullanıcının seviyesine uygun, anlaşılır açıklamalar yapmak
+GÖREVIN:
+- Kısa, net ve anlaşılır cevaplar ver
+- Gereksiz uzatma
+- Başlık, numara, yıldız işareti kullanma
+- Sadece düz metin paragraf halinde yaz
+- Öğrencinin seviyesine uygun açıkla
+- Örneklerle destekle ama kısa tut
 
-ÖNEMLİ KURALLAR:
-- Sadece alıntı yapma, öğrendiklerinden yeni çıkarımlar yap
-- Örneklerdeki mantığı anlayıp benzer sorulara uygula
-- Adım adım çözüm yöntemleri göster
-- Kavramları basit örneklerle açıkla
-- Türkçe ve anlaşılır ol
-- Eğer emin değilsen, "Bu konuda daha fazla örneğe ihtiyacım var" de
+YAPMA:
+- ### ** ## gibi formatlar kullanma
+- 1. 2. şeklinde numaralandırma
+- Çok uzun açıklamalar
+- Gereksiz detaylar
 
-SEN BİR ÖĞRETMEN GİBİ DAVRAN, SADECE KOPYALA-YAPIŞTIR YAPAN BİR BOT DEĞİL."""
+Sen bir öğretmen gibi, sade ve anlaşılır konuş."""
         
         chat = LlmChat(
             api_key=os.environ.get('EMERGENT_LLM_KEY'),
@@ -193,31 +195,17 @@ SEN BİR ÖĞRETMEN GİBİ DAVRAN, SADECE KOPYALA-YAPIŞTIR YAPAN BİR BOT DEĞ�
         ).with_model("openai", "gpt-4o-mini")
         
         if document_content:
-            prompt = f"""ÖĞRENME KAYNAĞI:
-{document_content[:4000]}
+            prompt = f"""Bu kaynaklardan yararlanarak soruyu cevapla:
 
-ÖĞRENCİ SORUSU: {question}
+{document_content[:3000]}
 
-Yukarıdaki kaynaktan öğrendiğin bilgi, yöntem ve mantığı kullanarak soruyu cevapla. 
-Sadece metni kopyalama, öğrendiklerini UYGULAY:
+Soru: {question}
 
-1. Konuyu kendi cümlelerinle açıkla
-2. Varsa benzer örnekler ver
-3. Adım adım çözüm yolu göster
-4. Kavramları günlük hayattan örneklerle destekle
-5. Eğer kaynak yeterli değilse, genel bilginle tamamla
-
-Unutma: Sen bir ÖĞRETMEN olarak cevap veriyorsun!"""
+Kısa ve net cevap ver. Başlık, numara, özel işaret kullanma. Sadece düz metin paragraf halinde yaz."""
         else:
-            prompt = f"""ÖĞRENCİ SORUSU: {question}
+            prompt = f"""Soru: {question}
 
-Bu soruyu öğretmen olarak cevapla:
-1. Konuyu basit dille açıkla
-2. Örneklerle destekle  
-3. Adım adım anlat
-4. Anlaşılır ol
-
-Eğer bu konuda daha önce sana yüklenen örnekler varsa onlardan yararlan, yoksa genel eğitim bilginle cevapla."""
+Kısa ve net cevap ver. Başlık, numara, özel işaret kullanma. Sadece düz metin paragraf halinde yaz."""
         
         user_message = UserMessage(text=prompt)
         response = await chat.send_message(user_message)
