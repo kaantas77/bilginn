@@ -266,8 +266,14 @@ function App() {
         setCurrentChatId(response.data.chat_id);
       }
 
-      // Chat geçmişini güncelle
-      await loadChatHistory();
+      // Chat geçmişini güncelle ve title'ı güncelle
+      setChatHistory(prevHistory => {
+        return prevHistory.map(chat => 
+          chat.id === response.data.chat_id 
+            ? { ...chat, title: response.data.chat_title, updated_at: new Date().toISOString() }
+            : chat
+        );
+      });
 
     } catch (error) {
       console.error("Ask question error:", error);
