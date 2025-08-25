@@ -616,19 +616,26 @@ async def ask_image(
         # Fotoğrafı AI ile işle
         ai_response = await process_image_with_vision(file_bytes, question if question else None)
         
-        # Chat yoksa oluştur
-        if not chat_id:
+        # Chat yoksa veya boşsa oluştur
+        if not chat_id or chat_id == "":
             # Yeni chat oluştur - başlık fotoğraf işleme olsun
             chat_title = "Fotoğraf Analizi"
             chat = ChatSession(user_id=current_user['id'], title=chat_title)
             await db.chats.insert_one(chat.dict())
             chat_id = chat.id
+            chat_title = chat.title
         else:
-            # Mevcut chat'i güncelle
+            # Mevcut chat'i kontrol et
             chat = await db.chats.find_one({"id": chat_id, "user_id": current_user['id']})
             if not chat:
-                raise HTTPException(status_code=404, detail="Chat bulunamadı")
-            chat_title = chat['title']
+                # Chat bulunamazsa yeni oluştur
+                chat_title = "Fotoğraf Analizi"
+                new_chat = ChatSession(user_id=current_user['id'], title=chat_title)
+                await db.chats.insert_one(new_chat.dict())
+                chat_id = new_chat.id
+                chat_title = new_chat.title
+            else:
+                chat_title = chat['title']
         
         # Kullanıcı mesajını kaydet (fotoğraf + soru)
         user_message_content = f"📸 Fotoğraf yükledi"
