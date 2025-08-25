@@ -373,15 +373,12 @@ function App() {
       }
     };
 
-    // Sadece admin için dinle
-    if (isAuthenticated && currentUser?.email === 'admin@bilgin.com') {
-      window.addEventListener('keydown', handleKeyDown);
-    }
+    window.addEventListener('keydown', handleKeyDown);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isAuthenticated, currentUser]);
+  }, []);
 
   // İsim formatlaması
   const formatName = (name) => {
