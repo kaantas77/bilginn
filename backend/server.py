@@ -478,7 +478,18 @@ async def get_user_chats(current_user: dict = Depends(get_current_user)):
         {"user_id": current_user['id']}
     ).sort("updated_at", -1).to_list(50)
     
-    return chats
+    # ObjectId'leri kaldır ve sadece gerekli alanları döndür
+    result = []
+    for chat in chats:
+        result.append({
+            "id": chat["id"],
+            "title": chat["title"], 
+            "created_at": chat["created_at"],
+            "updated_at": chat["updated_at"],
+            "message_count": chat.get("message_count", 0)
+        })
+    
+    return result
 
 @api_router.post("/chat/new")
 async def create_new_chat(current_user: dict = Depends(get_current_user)):
