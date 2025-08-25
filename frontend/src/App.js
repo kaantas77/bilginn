@@ -33,6 +33,11 @@ function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   
+  // Image upload states
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageQuestion, setImageQuestion] = useState("");
+  
   // Admin states
   const [showFullAdminPanel, setShowFullAdminPanel] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
