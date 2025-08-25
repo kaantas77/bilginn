@@ -408,7 +408,39 @@ function App() {
     ).join(' ');
   };
 
-  const formatTime = (date) => {
+  // Chat silme
+  const handleDeleteChat = async (chatId, chatTitle) => {
+    if (!confirm(`"${chatTitle}" sohbetini silmek istediğinize emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API}/chat/${chatId}`, {
+        headers: getAuthHeaders()
+      });
+
+      // Chat listesinden kaldır
+      setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
+      
+      // Eğer silinen chat aktif ise ana sayfaya dön
+      if (currentChatId === chatId) {
+        setCurrentChatId(null);
+        setChatMessages([]);
+      }
+
+      toast({
+        title: "Başarı",
+        description: "Sohbet silindi",
+      });
+    } catch (error) {
+      console.error("Chat delete error:", error);
+      toast({
+        title: "Hata",
+        description: "Sohbet silinemedi",
+        variant: "destructive",
+      });
+    }
+  };
     return new Date(date).toLocaleTimeString('tr-TR', { 
       hour: '2-digit', 
       minute: '2-digit' 
