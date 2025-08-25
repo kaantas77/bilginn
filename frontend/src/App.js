@@ -645,7 +645,6 @@ function App() {
                     value={loginData.password}
                     onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                     className="bg-gray-800 border-gray-600 text-white"
-                    required
                   />
                   <Button
                     type="submit"
