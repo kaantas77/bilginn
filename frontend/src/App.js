@@ -283,7 +283,7 @@ function App() {
 
   // Admin panel fonksiyonları
   const handleAdminLogin = () => {
-    if (adminPassword === "mugosko770329") {
+    if (adminPassword === "mugusko7715") {
       setIsAdminAuthenticated(true);
       setAdminPassword("");
       loadDocuments();
