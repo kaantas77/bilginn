@@ -234,6 +234,13 @@ function App() {
     return new Date(dateString).toLocaleString('tr-TR');
   };
 
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString('tr-TR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
