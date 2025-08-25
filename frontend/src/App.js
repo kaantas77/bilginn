@@ -794,7 +794,7 @@ function App() {
 
           <Button
             onClick={handleNewChat}
-            className="w-full bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm"
+            className="w-full bg-black/80 hover:bg-gray-900/80 backdrop-blur-sm border border-gray-600"
           >
             <Plus className="h-4 w-4 mr-2" />
             Yeni Sohbet
