@@ -1063,6 +1063,17 @@ function App() {
                           : 'bg-gray-800 text-white'
                       }`}
                     >
+                      {/* Fotoğraf varsa göster */}
+                      {message.image_base64 && (
+                        <div className="mb-3">
+                          <img
+                            src={`data:image/jpeg;base64,${message.image_base64}`}
+                            alt="Yüklenen fotoğraf"
+                            className="max-w-full max-h-60 rounded-lg border border-gray-600"
+                          />
+                        </div>
+                      )}
+                      
                       <div className="whitespace-pre-wrap leading-relaxed">
                         {message.content}
                       </div>
