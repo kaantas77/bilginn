@@ -196,10 +196,10 @@ function App() {
       setCurrentChatId(response.data.chat_id);
       setChatMessages([]);
       
-      // Yeni chat'i hemen listeye ekle
+      // Yeni chat'i hemen listeye ekle (başlık henüz 'Yeni Sohbet')
       const newChat = {
         id: response.data.chat_id,
-        title: response.data.title,
+        title: "Yeni Sohbet", // İlk mesaj gönderilince değişecek
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         message_count: 0
