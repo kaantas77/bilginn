@@ -245,6 +245,10 @@ input::placeholder, textarea::placeholder {
   z-index: 50;
 }
 
+.z-100 {
+  z-index: 100;
+}
+
 /* Backdrop blur effect */
 .backdrop-blur {
   backdrop-filter: blur(8px);
