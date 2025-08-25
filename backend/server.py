@@ -584,7 +584,8 @@ async def get_chat_messages(chat_id: str, current_user: dict = Depends(get_curre
             "chat_id": msg["chat_id"],
             "type": msg["type"],
             "content": msg["content"],
-            "timestamp": msg["timestamp"]
+            "timestamp": msg["timestamp"],
+            "image_base64": msg.get("image_base64")  # Fotoğraf varsa ekle
         })
     
     return result
