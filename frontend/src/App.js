@@ -1089,34 +1089,109 @@ function App() {
             {/* Chat Input */}
             <div className="border-t border-gray-800/50 backdrop-blur-sm p-6">
               <div className="max-w-4xl mx-auto">
-                <div className="flex space-x-3">
-                  <Textarea
-                    placeholder="Ne merak ediyorsun? Sor bana!"
-                    value={currentQuestion}
-                    onChange={(e) => setCurrentQuestion(e.target.value)}
-                    className="flex-1 min-h-[50px] max-h-[120px] bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white placeholder-gray-400 resize-none"
-                    disabled={isAsking}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleAskQuestion();
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleAskQuestion}
-                    disabled={isAsking || !currentQuestion.trim()}
-                    className="px-4 py-2 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm self-end"
-                  >
-                    {isAsking ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+                
+                {/* Fotoğraf Önizleme */}
+                {imagePreview && (
+                  <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                    <div className="flex items-start space-x-3">
+                      <img
+                        src={imagePreview}
+                        alt="Yüklenen fotoğraf"
+                        className="w-20 h-20 object-cover rounded-lg border border-gray-600"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-300 mb-2">📸 Fotoğraf yüklendi</p>
+                        <Input
+                          placeholder="Bu fotoğraf hakkında soru sormak isterseniz yazın (isteğe bağlı)"
+                          value={imageQuestion}
+                          onChange={(e) => setImageQuestion(e.target.value)}
+                          className="bg-gray-900/50 border-gray-700/50 text-white text-sm"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleRemoveImage}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300 p-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="flex justify-end mt-3 space-x-2">
+                      <Button
+                        onClick={handleAskWithImage}
+                        disabled={isAsking}
+                        className="bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm"
+                      >
+                        {isAsking ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Analiz ediliyor...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="mr-2 h-4 w-4" />
+                            Fotoğrafı Analiz Et
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Normal Chat Input */}
+                {!imagePreview && (
+                  <div className="flex space-x-3">
+                    <Textarea
+                      placeholder="Ne merak ediyorsun? Sor bana!"
+                      value={currentQuestion}
+                      onChange={(e) => setCurrentQuestion(e.target.value)}
+                      className="flex-1 min-h-[50px] max-h-[120px] bg-gray-900/50 backdrop-blur-sm border-gray-700/50 text-white placeholder-gray-400 resize-none"
+                      disabled={isAsking}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAskQuestion();
+                        }
+                      }}
+                    />
+                    
+                    {/* Fotoğraf yükleme butonu */}
+                    <div className="flex flex-col space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <Button
+                        onClick={() => document.getElementById('image-upload').click()}
+                        variant="outline"
+                        className="p-3 border-gray-600/50 text-gray-300 hover:bg-gray-800/50"
+                        title="Fotoğraf yükle"
+                      >
+                        <Image className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        onClick={handleAskQuestion}
+                        disabled={isAsking || !currentQuestion.trim()}
+                        className="px-4 py-2 bg-blue-600/80 hover:bg-blue-700/80 backdrop-blur-sm self-end"
+                      >
+                        {isAsking ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
                 <p className="text-xs text-gray-500 mt-2">
-                  Enter ile gönder, Shift+Enter ile yeni satır
+                  Enter ile gönder, Shift+Enter ile yeni satır • Fotoğraf yükleyerek yazıları okutabilirsiniz
                 </p>
               </div>
             </div>
