@@ -256,21 +256,33 @@ async def get_chat_context(chat_id: str, limit: int = 10) -> str:
     return context
 
 async def generate_chat_title(first_message: str) -> str:
-    """İlk mesajdan chat title oluştur"""
+    """İlk mesajdan anlamlı chat title oluştur"""
     try:
         chat = LlmChat(
             api_key=os.environ.get('EMERGENT_LLM_KEY'),
             session_id=str(uuid.uuid4()),
-            system_message="Sen kısa ve öz chat başlıkları oluşturan bir asistansın. Verilen mesajdan 2-4 kelimelik Türkçe başlık üret."
+            system_message="Sen kısa ve anlamlı chat başlıkları oluşturan bir asistansın. Verilen sorudan 2-4 kelimelik Türkçe başlık üret. Genel selamlaşmalarda 'Genel Sohbet' de."
         ).with_model("openai", "gpt-4o-mini")
         
-        user_message = UserMessage(text=f"Bu mesaj için kısa bir başlık oluştur: {first_message[:100]}")
+        user_message = UserMessage(text=f"Bu soru için kısa bir başlık oluştur: {first_message[:100]}")
         response = await chat.send_message(user_message)
         
         title = response.strip().replace('"', '').replace("'", '')
-        return title[:50] if len(title) > 50 else title
+        
+        # Başlığı temizle ve kısalt
+        if len(title) > 30:
+            title = title[:30] + "..."
+            
+        return title if title else "Genel Sohbet"
     except:
-        return "Yeni Sohbet"
+        # Hata durumunda basit başlık oluştur
+        words = first_message.lower().split()[:3]
+        if any(word in first_message.lower() for word in ['merhaba', 'selam', 'nasıl']):
+            return "Genel Sohbet"
+        elif any(word in words for word in ['nedir', 'ne', 'nasıl']):
+            return f"{' '.join(words[:2]).title()} Sorusu"
+        else:
+            return f"{' '.join(words[:2]).title()}"
 
 async def get_ai_answer(question: str, chat_context: str = "", document_content: str = None):
     """AI'dan akıllı ve uygun cevap alma"""
