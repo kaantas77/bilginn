@@ -220,12 +220,8 @@ function App() {
 
   // Chat seç
   const handleSelectChat = async (chatId) => {
-    console.log("Selecting chat:", chatId, "Current:", currentChatId);
-    
     setCurrentChatId(chatId);
     await loadChatMessages(chatId);
-    
-    console.log("Chat selected and messages loaded");
   };
 
   // Soru sor
